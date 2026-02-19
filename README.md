@@ -28,3 +28,9 @@
     * `git commit -m "{include a message describing your changes}"`
     * `git push`
 * Please do not push files that are in the .gitignore
+
+
+
+
+
+* also, on mac at least if `source venv/bin/activate` doesnt work I first did `python3 -m venv venv` and then that command it worked (changed (base) to (venv)). I am not sure if thisll work for everyone or what the point it but it created a venv folder w stuff in it and im pretty sure thats meant to be local not in the repo
