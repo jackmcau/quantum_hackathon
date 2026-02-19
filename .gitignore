@@ -1,0 +1,9 @@
+.venv
+venv
+uv.lock
+build
+quantum_hackathon.egg-info
+*.aux
+*.log
+*.out
+*.gz
