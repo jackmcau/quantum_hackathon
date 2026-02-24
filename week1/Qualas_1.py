@@ -18,5 +18,7 @@ backend = QasmSimulator()
 result = backend.run(qc.reverse_bits(), shots=10000).result()
 counts = result.get_counts()
 
-plot_histogram(counts,bar_labels=False)
+plot_histogram(counts,
+               bar_labels=False,
+               title="Counts over 10000 runs of random number generator")
 plt.show()
