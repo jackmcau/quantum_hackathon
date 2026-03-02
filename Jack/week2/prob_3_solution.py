@@ -131,4 +131,7 @@ def testCount():
     print(f"\tAverage key length: {sum/len(keys)}")
 
 if __name__ == "__main__":
-    testCount()
+    if(input("Enter 'test' for testing, anything else to normally run: ") == "test"):
+        testCount()
+    else:
+        main()
