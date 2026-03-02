@@ -42,8 +42,6 @@ def measurement_result(b, state: QuantumCircuit, U_b: QuantumCircuit):
     return result
 
 def alice_create_secret_key(a, t):
-    print(t)
-    print(a)
     key = ""
     for i, v in enumerate(t):
         if v == "1":
@@ -51,7 +49,6 @@ def alice_create_secret_key(a, t):
     return key
 
 def bob_create_secret_key(b, t):
-    print(b)
     key = ""
     for i, v in enumerate(t):
         if v == "1":
@@ -93,5 +90,45 @@ def main():
         print("Secret Key: " + SK)
         print("Secret Key Length: " + str(len(SK)))
 
+def testCount():
+    n = int(input("Security parameter: ")) # Choose security parameter
+    trials = int(input("Trials: "))
+    keys = []
+    present = 0 # Present and gone serve as counts for the number of times the algorithm has failed for eve being present and gone
+    gone = 0
+    for e in [True, False]:
+        for i in range(trials):
+            a = generate_random_string(n) # Alice generates string a
+            state = generate_alice_state(a) # Alice encodes a into quantum state
+
+            # Alice sends state to Bob
+            state = eavesdrop(e,n,state) # Eve intercepts state
+
+            # Eve sends (possibly modified) state to Bob
+            b = generate_random_string(n) # Bob generates string b
+            U_b = bob_evolution(b) # Bob constructs his unitary U_b
+            t = measurement_result(b,state,U_b) # Bob measures state, constructs string t
+
+            # Bob sends t to Alice
+            SK_a = alice_create_secret_key(a,t) # Alice constructs her key SK_a
+            SK_b = bob_create_secret_key(b,t) # Bob constructs his key SK_b
+            check = check_for_eve(SK_a, SK_b) # Check for Eve
+
+            if check == "Eve detected!": # Eve detected, abort
+                if not e: # Eve detected when not actually there
+                    gone += 1
+            else: # Eve not detected
+                if e: # eve not detected while present
+                    present += 1
+                else:
+                    keys.append(check)
+    sum = 0
+    for i in keys:
+        sum += len(i)
+    print("Stats:")
+    print(f"\tFalse positives: {gone}")
+    print(f"\tFalse negatives: {present}")
+    print(f"\tAverage key length: {sum/len(keys)}")
+
 if __name__ == "__main__":
-    main()
+    testCount()
