@@ -1,54 +1,62 @@
 from qiskit import *
 from qiskit_aer import QasmSimulator
-from matplotlib.pyplot import *
+import matplotlib.pyplot as plt
 
-backend = QasmSimulator()
-
-def generate_random_string(n): # We wrote this in week 1
+def generate_random_string(n: int) -> str: # We wrote this in week 1
     qr = QuantumRegister(n, 'q')
     cr = ClassicalRegister(n, 'c')
     qc = QuantumCircuit(qr,cr)
     for i in range(n):
         qc.h(qr[i])
     qc.measure(range(n), range(n))
+    backend = QasmSimulator()
     result = list(backend.run(qc.reverse_bits(), shots=1).result().get_counts().keys())[0]
     return result
 
-def generate_alice_state(a):
+def generate_alice_state(a: str) -> QuantumCircuit:
     qr = QuantumRegister(len(a), 'q')
     cr = ClassicalRegister(len(a), 'c')
     qc = QuantumCircuit(qr, cr)
     for i, v in enumerate(a):
+    # For every character in a, if the character is a 1 apply a hadamard gate to the corresponding qubit
+    # Phi a = kronecker phi a sub i
+    # Corresponding to step 2
         if v == "1":
-            qc.h(qr[i]) # put into |+>
+            qc.h(qr[i])
+    qc.barrier()
     return qc
 
-def eavesdrop(e, n, state: QuantumCircuit):
+def eavesdrop(e: bool, n: int, state: QuantumCircuit) -> QuantumCircuit:
     if e:
-        state.x([i for i in range(n)]) # Unitary x gate on first qubit
+        state.y([i for i in range(n)]) # Unitary y gate on all qubits in state
     return state
 
-def bob_evolution(b): # U b --> Hadamard gate on all "1"s and I on everything else
+def bob_evolution(b: str) -> QuantumCircuit: # U b --> Hadamard gate on all "1"s and I on everything else
     qc = QuantumCircuit(len(b))
     for i, v in enumerate(b):
         if v == "1":
             qc.h(i)
     return qc
 
-def measurement_result(b, state: QuantumCircuit, U_b: QuantumCircuit):
+def measurement_result(b: str, state: QuantumCircuit, U_b: QuantumCircuit) -> str:
     state.append(U_b.to_gate(), [i for i in range(len(b))])
+    state.barrier()
+    #print(state.decompose())
+    #state.decompose().draw(output="mpl")
+    #plt.show()
     state.measure(range(len(b)), range(len(b)))
+    backend = QasmSimulator()
     result = list(backend.run(state.decompose().reverse_bits(), shots=1).result().get_counts().keys())[0]
     return result
 
-def alice_create_secret_key(a, t):
+def alice_create_secret_key(a: str, t: str) -> str:
     key = ""
     for i, v in enumerate(t):
         if v == "1":
             key += a[i]
     return key
 
-def bob_create_secret_key(b, t):
+def bob_create_secret_key(b: str, t: str) -> str:
     key = ""
     for i, v in enumerate(t):
         if v == "1":
@@ -58,7 +66,7 @@ def bob_create_secret_key(b, t):
                 key += "0"
     return key
 
-def check_for_eve(SK_a, SK_b): # As a "random sample" i just decided to use the first half of the secret key
+def check_for_eve(SK_a: str, SK_b: str) -> str: # As a "random sample" i just decided to use the first half of the secret key
     return (SK_a[len(SK_a)//2:] if (SK_a[:len(SK_a)//2] == SK_b[:len(SK_a)//2]) else "Eve detected!")
 
 
@@ -126,8 +134,8 @@ def testCount():
     for i in keys:
         sum += len(i)
     print("Stats:")
-    print(f"\tFalse positives: {gone}")
-    print(f"\tFalse negatives: {present}")
+    print(f"\tFalse positives: {gone} -> {float(gone)/float(trials)*100}%")
+    print(f"\tFalse negatives: {present} -> {float(present)/float(trials)*100}%")
     print(f"\tAverage key length: {sum/len(keys)}")
 
 if __name__ == "__main__":
